@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-namespace SlotPrototype.Slots
+namespace SlotPrototype.UI
 {
     public class SlotView : MonoBehaviour
     {
@@ -24,3 +24,4 @@ namespace SlotPrototype.Slots
 #endif
     }
 }
+

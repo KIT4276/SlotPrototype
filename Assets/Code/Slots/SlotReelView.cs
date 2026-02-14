@@ -1,10 +1,12 @@
+using AxGrid;
 using AxGrid.Base;
+using AxGrid.Model;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace SlotPrototype.Slots
+namespace SlotPrototype.UI
 {
-    public class SlotReelView : MonoBehaviourExt
+    public class SlotReelView : MonoBehaviourExtBind
     {
         [Header("Refs")]
         [SerializeField] private RectTransform _content;
@@ -18,7 +20,6 @@ namespace SlotPrototype.Slots
         [Header("Stop")]
         [SerializeField] private float _decel = 800f;       
         [SerializeField] private float _stopEpsilon = 5f;    
-        [SerializeField] private float _snapSpeed = 1200f;   
 
         [Header("Layout")]
         [Tooltip("Высота одного слота (px). Если 0 — будет взята из первого элемента (rect.height).")]
@@ -30,6 +31,8 @@ namespace SlotPrototype.Slots
         [Header("Symbols")]
         [SerializeField] private List<Sprite> _sprites = new();
 
+        private const float SnapRemainingDown = 0.01f;
+
         private bool _isScrolling;
         private bool _isStopping;
         private bool _isSnapping;
@@ -38,14 +41,19 @@ namespace SlotPrototype.Slots
         private float _speed;
         private float Step => Mathf.Max(1f, GetCellHeight() + _spacing);
 
-        // Старт/стоп пока вручную дергать из кнопок
-        public void StartScroll()
+        [Bind("Reel.Start")]
+        private void StartScroll()
         {
+            _isStopping = false;
+            _isSnapping = false;
+            _snapRemainingDown = 0f;
+
             _speed = _startSpeed;
             _isScrolling = true;
         }
 
-        public void StopScroll()
+        [Bind("Reel.Stop")]
+        private void StopScroll()
         {
             _isStopping = true;
             _isSnapping = false;
@@ -103,6 +111,8 @@ namespace SlotPrototype.Slots
                         _isSnapping = false;
                         _isStopping = false;
                         _isScrolling = false;
+
+                        Settings.Invoke("Reel.Stopped");
                     }
                 }
             }
@@ -141,12 +151,14 @@ namespace SlotPrototype.Slots
 
             _snapRemainingDown = Mathf.Max(0f, -delta);
 
-            if (_snapRemainingDown <= 0.01f)
+            if (_snapRemainingDown <= SnapRemainingDown)
             {
                 _speed = 0f;
                 _isSnapping = false;
                 _isStopping = false;
                 _isScrolling = false;
+
+                Settings.Invoke("Reel.Stopped");
             }
         }
 
@@ -164,14 +176,6 @@ namespace SlotPrototype.Slots
 
             float windowHalfH = _window.rect.height * 0.5f;
             float bottomY = -windowHalfH - recycleMargin;
-            float topY = windowHalfH + recycleMargin;
-
-            float maxY = float.NegativeInfinity;
-            for (int i = 0; i < _itemViews.Count; i++)
-            {
-                float y = GetItemYInWindow(_itemViews[i].RectTransform);
-                if (y > maxY) maxY = y;
-            }
 
             for (int i = 0; i < _itemViews.Count; i++)
             {
@@ -181,11 +185,7 @@ namespace SlotPrototype.Slots
                 if (y < bottomY)
                 {
                     item.RectTransform.anchoredPosition += Vector2.up * (step * _itemViews.Count);
-
                     SetRandomSprite(item);
-
-                    float newY = GetItemYInWindow(item.RectTransform);
-                    if (newY > maxY) maxY = newY;
                 }
             }
         }

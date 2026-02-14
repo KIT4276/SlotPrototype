@@ -18,7 +18,10 @@ namespace SlotPrototype.States
         }
 
         [OnStart]
-        private void StartFsm() => Settings.Fsm.Start("Ready");
+        private void StartFsm()
+        {
+            Settings.Fsm.Start("ReadyState");
+        }
 
         [OnUpdate]
         private void Tick() => Settings.Fsm.Update(Time.deltaTime);

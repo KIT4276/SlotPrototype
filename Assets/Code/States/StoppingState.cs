@@ -1,23 +1,25 @@
 ﻿using AxGrid;
 using AxGrid.FSM;
 using AxGrid.Model;
+using UnityEngine;
 
 namespace SlotPrototype.States
 {
-    [State("Stopping")]
+    [State("StoppingState")]
     public class StoppingState : FSMState
     {
-        public void Enter()
+        [Enter]
+        public  void Enter()
         {
-            Settings.Model.Set("UI.CanStart", false);
-            Settings.Model.Set("UI.CanStop", false);
+            Debug.Log("Enter StoppingState");
+            Settings.Model.Set("UI_CanStart", false);
+            Settings.Model.Set("UI_CanStop", false);
         }
 
         [Bind("Reel.Stopped")]
         private void OnStopped()
         {
-            Parent.Change("Ready");
+            Parent.Change("ReadyState");
         }
     }
-
 }

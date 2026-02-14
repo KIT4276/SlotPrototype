@@ -1,21 +1,24 @@
 ﻿using AxGrid;
 using AxGrid.FSM;
+using UnityEngine;
 
 namespace SlotPrototype.States
 {
-    [State("SpinningLocked")]
+    [State("SpinningLockedState")]
     public class SpinningLockedState : FSMState
     {
-        public void Enter()
+        [Enter]
+        public  void Enter()
         {
-            Settings.Model.Set("UI.CanStart", false);
-            Settings.Model.Set("UI.CanStop", false);
+            Debug.Log("Enter SpinningLockedState");
+            Settings.Model.Set("UI_CanStart", false);
+            Settings.Model.Set("UI_CanStop", false);
         }
 
         [One(3f)]
         private void UnlockStop()
         {
-            Parent.Change("Spinning");
+            Parent.Change("SpinningState");
         }
     }
 }

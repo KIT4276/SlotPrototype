@@ -119,6 +119,50 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &166641277
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 166641279}
+  - component: {fileID: 166641278}
+  m_Layer: 0
+  m_Name: InitSlotsFsm
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &166641278
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 166641277}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9113eb38249a7d4fbd893edf2738f03, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &166641279
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 166641277}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &331069824
 GameObject:
   m_ObjectHideFlags: 0
@@ -1115,6 +1159,7 @@ GameObject:
   - component: {fileID: 836153872}
   - component: {fileID: 836153871}
   - component: {fileID: 836153870}
+  - component: {fileID: 836153873}
   m_Layer: 5
   m_Name: StartButton
   m_TagString: Untagged
@@ -1185,19 +1230,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 836153871}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1643781815}
-        m_TargetAssemblyTypeName: SlotPrototype.Slots.SlotReelView, Assembly-CSharp
-        m_MethodName: StartScroll
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &836153871
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1236,6 +1269,23 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 836153868}
   m_CullTransparentMesh: 1
+--- !u!114 &836153873
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 836153868}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 57865061d070ddc4b9de49e35f528a8d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  globalModel: 1
+  _globalModel: 1
+  _fieldName: UI_CanStart
+  _clickEventName: UI.StartClick
+  _button: {fileID: 836153870}
 --- !u!1 &840637785
 GameObject:
   m_ObjectHideFlags: 0
@@ -1455,6 +1505,7 @@ GameObject:
   - component: {fileID: 1021243925}
   - component: {fileID: 1021243924}
   - component: {fileID: 1021243923}
+  - component: {fileID: 1021243926}
   m_Layer: 5
   m_Name: StopButton
   m_TagString: Untagged
@@ -1525,19 +1576,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1021243924}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1643781815}
-        m_TargetAssemblyTypeName: SlotPrototype.Slots.SlotReelView, Assembly-CSharp
-        m_MethodName: StopScroll
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &1021243924
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1576,6 +1615,23 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1021243921}
   m_CullTransparentMesh: 1
+--- !u!114 &1021243926
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1021243921}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 57865061d070ddc4b9de49e35f528a8d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  globalModel: 1
+  _globalModel: 1
+  _fieldName: UI_CanStop
+  _clickEventName: UI.StopClick
+  _button: {fileID: 1021243923}
 --- !u!1 &1159286391
 GameObject:
   m_ObjectHideFlags: 0
@@ -1973,6 +2029,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5f80baa1c19f9d44e993da0d8c89f609, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  globalModel: 0
   _content: {fileID: 841534870}
   _window: {fileID: 1643781814}
   _itemViews:
@@ -1986,7 +2043,6 @@ MonoBehaviour:
   _accel: 100
   _decel: 200
   _stopEpsilon: 25
-  _snapSpeed: 50
   _cellHeight: 80
   _spacing: 15
   _sprites:
@@ -2371,3 +2427,4 @@ SceneRoots:
   - {fileID: 619394802}
   - {fileID: 1519927437}
   - {fileID: 405896927}
+  - {fileID: 166641279}
