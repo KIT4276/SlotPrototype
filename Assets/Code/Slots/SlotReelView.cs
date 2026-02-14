@@ -1,0 +1,242 @@
+using AxGrid.Base;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace SlotPrototype.Slots
+{
+    public class SlotReelView : MonoBehaviourExt
+    {
+        [Header("Refs")]
+        [SerializeField] private RectTransform _content;
+        [SerializeField] private RectTransform _window;
+        [SerializeField] private List<SlotView> _itemViews = new();
+
+        [Header("Motion")]
+        [SerializeField] private float _startSpeed = 50f;      
+        [SerializeField] private float _accel = 50f;
+
+        [Header("Stop")]
+        [SerializeField] private float _decel = 800f;       
+        [SerializeField] private float _stopEpsilon = 5f;    
+        [SerializeField] private float _snapSpeed = 1200f;   
+
+        [Header("Layout")]
+        [Tooltip("Высота одного слота (px). Если 0 — будет взята из первого элемента (rect.height).")]
+        [SerializeField] private float _cellHeight = 0f;
+
+        [Tooltip("Отступ между слотами (px).")]
+        [SerializeField] private float _spacing = 15f;
+
+        [Header("Symbols")]
+        [SerializeField] private List<Sprite> _sprites = new();
+
+        private bool _isScrolling;
+        private bool _isStopping;
+        private bool _isSnapping;
+        private float _snapRemainingDown;
+
+        private float _speed;
+        private float Step => Mathf.Max(1f, GetCellHeight() + _spacing);
+
+        // Старт/стоп пока вручную дергать из кнопок
+        public void StartScroll()
+        {
+            _speed = _startSpeed;
+            _isScrolling = true;
+        }
+
+        public void StopScroll()
+        {
+            _isStopping = true;
+            _isSnapping = false;
+            _snapRemainingDown = 0f;
+        }
+
+        [OnStart]
+        private void ValidateSetup()
+        {
+            if (_window == null) _window = GetComponent<RectTransform>();
+            if (_content == null)
+                Debug.LogWarning($"{nameof(SlotReelView)}: _content is null. Assign ReelContent.");
+
+            if (_itemViews == null || _itemViews.Count == 0)
+                Debug.LogWarning($"{nameof(SlotReelView)}: _itemViews is empty. Assign Slot items.");
+        }
+
+        [OnUpdate]
+        private void Tick()
+        {
+            if (!_isScrolling || _window == null || _content == null || _itemViews == null || _itemViews.Count == 0)
+                return;
+
+            float dt = Time.deltaTime;
+
+            if (!_isStopping)
+            {
+                _speed += _accel * dt;
+                MoveDown(_speed * dt);
+            }
+            else
+            {
+                if (!_isSnapping)
+                {
+                    _speed = Mathf.MoveTowards(_speed, 0f, _decel * dt);
+
+                    if (_speed > _stopEpsilon)
+                    {
+                        MoveDown(_speed * dt);
+                    }
+                    else
+                    {
+                        BeginSnapDown();
+                    }
+                }
+                else
+                {
+                    float stepMove = Mathf.Min(_speed * dt, _snapRemainingDown);
+                    MoveDown(stepMove);
+                    _snapRemainingDown -= stepMove;
+
+                    if (_snapRemainingDown <= 0.01f)
+                    {
+                        _speed = 0f;
+                        _isSnapping = false;
+                        _isStopping = false;
+                        _isScrolling = false;
+                    }
+                }
+            }
+        }
+
+        private void MoveDown(float pixels)
+        {
+            _content.anchoredPosition += Vector2.down * pixels;
+            RecycleIfNeeded();
+            StabilizeContentOffsetIfNeeded();
+        }
+
+        private void BeginSnapDown()
+        {
+            _isSnapping = true;
+
+            _speed = Mathf.Max(_speed, _stopEpsilon);
+
+            float closestAbsY = float.PositiveInfinity;
+            float closestY = 0f;
+
+            for (int i = 0; i < _itemViews.Count; i++)
+            {
+                float y = GetItemYInWindow(_itemViews[i].RectTransform);
+                float ay = Mathf.Abs(y);
+                if (ay < closestAbsY)
+                {
+                    closestAbsY = ay;
+                    closestY = y;
+                }
+            }
+
+            float delta = -closestY;
+            if (delta > 0f)
+                delta -= Step; 
+
+            _snapRemainingDown = Mathf.Max(0f, -delta);
+
+            if (_snapRemainingDown <= 0.01f)
+            {
+                _speed = 0f;
+                _isSnapping = false;
+                _isStopping = false;
+                _isScrolling = false;
+            }
+        }
+
+        private float GetCellHeight()
+        {
+            if (_cellHeight > 0f) return _cellHeight;
+            if (_itemViews == null || _itemViews.Count == 0) return 100f;
+            return Mathf.Max(1f, _itemViews[0].RectTransform.rect.height);
+        }
+
+        private void RecycleIfNeeded()
+        {
+            float step = Step;
+            float recycleMargin = step * 0.5f;
+
+            float windowHalfH = _window.rect.height * 0.5f;
+            float bottomY = -windowHalfH - recycleMargin;
+            float topY = windowHalfH + recycleMargin;
+
+            float maxY = float.NegativeInfinity;
+            for (int i = 0; i < _itemViews.Count; i++)
+            {
+                float y = GetItemYInWindow(_itemViews[i].RectTransform);
+                if (y > maxY) maxY = y;
+            }
+
+            for (int i = 0; i < _itemViews.Count; i++)
+            {
+                var item = _itemViews[i];
+                float y = GetItemYInWindow(item.RectTransform);
+
+                if (y < bottomY)
+                {
+                    item.RectTransform.anchoredPosition += Vector2.up * (step * _itemViews.Count);
+
+                    SetRandomSprite(item);
+
+                    float newY = GetItemYInWindow(item.RectTransform);
+                    if (newY > maxY) maxY = newY;
+                }
+            }
+        }
+
+        private float GetItemYInWindow(RectTransform item)
+        {
+            Vector3 world = item.TransformPoint(item.rect.center);
+            Vector3 local = _window.InverseTransformPoint(world);
+            return local.y;
+        }
+
+        private void StabilizeContentOffsetIfNeeded()
+        {
+            float step = Step;
+
+            float y = _content.anchoredPosition.y;
+            int k = Mathf.FloorToInt(y / step);
+
+            if (k == 0) return;
+
+            float shift = k * step;
+
+            for (int i = 0; i < _itemViews.Count; i++)
+            {
+                var rt = _itemViews[i].RectTransform;
+                var p = rt.anchoredPosition;
+                rt.anchoredPosition = new Vector2(p.x, p.y + shift);
+            }
+
+            _content.anchoredPosition = new Vector2(_content.anchoredPosition.x, y - shift);
+        }
+
+        private void SetRandomSprite(SlotView slot)
+        {
+            if (_sprites == null || _sprites.Count == 0) return;
+
+            slot.SetImage( _sprites[Random.Range(0, _sprites.Count)]);
+        }
+
+#if UNITY_EDITOR
+        [ContextMenu("Assign _itemViews from children")]
+        private void AssignFromChildren()
+        {
+            if (_content == null) return;
+            _itemViews = new List<SlotView>();
+            for (int i = 0; i < _content.childCount; i++)
+            {
+                var sv = _content.GetChild(i).GetComponent<SlotView>();
+                if (sv != null) _itemViews.Add(sv);
+            }
+        }
+#endif
+    }
+}
