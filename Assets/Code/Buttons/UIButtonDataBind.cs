@@ -32,7 +32,7 @@ namespace SlotPrototype.UI
         [OnStart]
         private void ApplyInitial()
         {
-            //_button.interactable = Settings.Model.GetBool(_fieldName, false);
+            //_button.interactable = Settings.Model.GetBool(_fieldName, false); // вообще лажа получается
         }
 
         private void OnClick()
@@ -41,10 +41,10 @@ namespace SlotPrototype.UI
             Settings.Invoke(_clickEventName);
         }
 
-        // слушаем событие вида On{FieldName}Changed, где FieldName берётся из инспектора.
         [Bind("On{_fieldName}Changed")]
-        private void OnInteractableChanged(bool value)
+        private void OnInteractableChanged(bool value)// не проходит!
         {
+            Debug.Log("OnInteractableChanged");
             if (_button != null) _button.interactable = value;
         }
 
