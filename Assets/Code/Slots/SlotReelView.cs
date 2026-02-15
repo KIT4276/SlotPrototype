@@ -3,6 +3,7 @@ using AxGrid.Base;
 using AxGrid.Model;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace SlotPrototype.UI
 {
@@ -11,6 +12,7 @@ namespace SlotPrototype.UI
         [Header("Refs")]
         [SerializeField] private RectTransform _content;
         [SerializeField] private RectTransform _window;
+        [SerializeField] private VerticalLayoutGroup _contentLayoutGroup;
         [SerializeField] private List<SlotView> _itemViews = new();
 
         [Header("Motion")]
@@ -18,15 +20,9 @@ namespace SlotPrototype.UI
         [SerializeField] private float _accel = 50f;
 
         [Header("Stop")]
-        [SerializeField] private float _decel = 800f;       
+        [Tooltip("Время торможения до 0 (сек). После этого запускается snap.")]
+        [SerializeField] private float _stopTime = 0.6f;
         [SerializeField] private float _stopEpsilon = 5f;    
-
-        [Header("Layout")]
-        [Tooltip("Высота одного слота (px). Если 0 — будет взята из первого элемента (rect.height).")]
-        [SerializeField] private float _cellHeight = 0f;
-
-        [Tooltip("Отступ между слотами (px).")]
-        [SerializeField] private float _spacing = 15f;
 
         [Header("Symbols")]
         [SerializeField] private List<Sprite> _sprites = new();
@@ -39,7 +35,11 @@ namespace SlotPrototype.UI
         private float _snapRemainingDown;
 
         private float _speed;
-        private float Step => Mathf.Max(1f, GetCellHeight() + _spacing);
+
+        private float _stopTimer;
+        private float _stopStartSpeed;
+
+        private float Step => Mathf.Max(1f, GetCellHeight() + _contentLayoutGroup.spacing);
 
         [Bind("Reel.Start")]
         private void StartScroll()
@@ -47,6 +47,9 @@ namespace SlotPrototype.UI
             _isStopping = false;
             _isSnapping = false;
             _snapRemainingDown = 0f;
+
+            _stopTimer = 0f;
+            _stopStartSpeed = 0f;
 
             _speed = _startSpeed;
             _isScrolling = true;
@@ -58,12 +61,14 @@ namespace SlotPrototype.UI
             _isStopping = true;
             _isSnapping = false;
             _snapRemainingDown = 0f;
+
+            _stopTimer = 0f;
+            _stopStartSpeed = _speed; // фиксируем текущую скорость в момент команды Stop
         }
 
         [OnStart]
         private void ValidateSetup()
         {
-            if (_window == null) _window = GetComponent<RectTransform>();
             if (_content == null)
                 Debug.LogWarning($"{nameof(SlotReelView)}: _content is null. Assign ReelContent.");
 
@@ -83,37 +88,41 @@ namespace SlotPrototype.UI
             {
                 _speed += _accel * dt;
                 MoveDown(_speed * dt);
+                return;
             }
-            else
-            {
-                if (!_isSnapping)
-                {
-                    _speed = Mathf.MoveTowards(_speed, 0f, _decel * dt);
 
-                    if (_speed > _stopEpsilon)
-                    {
-                        MoveDown(_speed * dt);
-                    }
-                    else
-                    {
-                        BeginSnapDown();
-                    }
+            if (!_isSnapping)
+            {
+                // Торможение по времени
+                float stopTime = Mathf.Max(0.0001f, _stopTime);
+                _stopTimer += dt;
+
+                float t = Mathf.Clamp01(_stopTimer / stopTime);
+                _speed = Mathf.Lerp(_stopStartSpeed, 0f, t);
+
+                if (_speed > _stopEpsilon)
+                {
+                    MoveDown(_speed * dt);
                 }
                 else
                 {
-                    float stepMove = Mathf.Min(_speed * dt, _snapRemainingDown);
-                    MoveDown(stepMove);
-                    _snapRemainingDown -= stepMove;
+                    BeginSnapDown();
+                }
+            }
+            else
+            {
+                float stepMove = Mathf.Min(_speed * dt, _snapRemainingDown);
+                MoveDown(stepMove);
+                _snapRemainingDown -= stepMove;
 
-                    if (_snapRemainingDown <= 0.01f)
-                    {
-                        _speed = 0f;
-                        _isSnapping = false;
-                        _isStopping = false;
-                        _isScrolling = false;
+                if (_snapRemainingDown <= 0.01f)
+                {
+                    _speed = 0f;
+                    _isSnapping = false;
+                    _isStopping = false;
+                    _isScrolling = false;
 
-                        Settings.Invoke("Reel.Stopped");
-                    }
+                    Settings.Invoke("Reel.Stopped");
                 }
             }
         }
@@ -121,8 +130,7 @@ namespace SlotPrototype.UI
         private void MoveDown(float pixels)
         {
             _content.anchoredPosition += Vector2.down * pixels;
-            RecycleIfNeeded();
-            StabilizeContentOffsetIfNeeded();
+            RecycleBySiblingIfNeeded();
         }
 
         private void BeginSnapDown()
@@ -164,12 +172,11 @@ namespace SlotPrototype.UI
 
         private float GetCellHeight()
         {
-            if (_cellHeight > 0f) return _cellHeight;
             if (_itemViews == null || _itemViews.Count == 0) return 100f;
             return Mathf.Max(1f, _itemViews[0].RectTransform.rect.height);
         }
 
-        private void RecycleIfNeeded()
+        private void RecycleBySiblingIfNeeded()
         {
             float step = Step;
             float recycleMargin = step * 0.5f;
@@ -177,16 +184,28 @@ namespace SlotPrototype.UI
             float windowHalfH = _window.rect.height * 0.5f;
             float bottomY = -windowHalfH - recycleMargin;
 
-            for (int i = 0; i < _itemViews.Count; i++)
-            {
-                var item = _itemViews[i];
-                float y = GetItemYInWindow(item.RectTransform);
+            // максимум сколько элементов можно переставить за кадр
+            int guard = _itemViews.Count + 2;
 
-                if (y < bottomY)
-                {
-                    item.RectTransform.anchoredPosition += Vector2.up * (step * _itemViews.Count);
-                    SetRandomSprite(item);
-                }
+            while (guard-- > 0)
+            {
+                var last = _itemViews[_itemViews.Count - 1];
+                float y = GetItemYInWindow(last.RectTransform);
+
+                // если последний ещё видим (не ниже границы) — выходим
+                if (y >= bottomY)
+                    break;
+
+                // переносим нижний наверх
+                last.RectTransform.SetAsFirstSibling();
+                SetRandomSprite(last);
+
+                // синхронизируем список с новым порядком
+                _itemViews.RemoveAt(_itemViews.Count - 1);
+                _itemViews.Insert(0, last);
+
+                // компенсируем скачок из-за перестановки
+                _content.anchoredPosition += Vector2.up * step;
             }
         }
 
@@ -195,27 +214,6 @@ namespace SlotPrototype.UI
             Vector3 world = item.TransformPoint(item.rect.center);
             Vector3 local = _window.InverseTransformPoint(world);
             return local.y;
-        }
-
-        private void StabilizeContentOffsetIfNeeded()
-        {
-            float step = Step;
-
-            float y = _content.anchoredPosition.y;
-            int k = Mathf.FloorToInt(y / step);
-
-            if (k == 0) return;
-
-            float shift = k * step;
-
-            for (int i = 0; i < _itemViews.Count; i++)
-            {
-                var rt = _itemViews[i].RectTransform;
-                var p = rt.anchoredPosition;
-                rt.anchoredPosition = new Vector2(p.x, p.y + shift);
-            }
-
-            _content.anchoredPosition = new Vector2(_content.anchoredPosition.x, y - shift);
         }
 
         private void SetRandomSprite(SlotView slot)
