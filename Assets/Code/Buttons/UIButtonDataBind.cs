@@ -1,19 +1,18 @@
 using AxGrid;
 using AxGrid.Base;
-using AxGrid.Model;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace SlotPrototype.UI
 {
     [RequireComponent(typeof(Button))]
-    public class UIButtonDataBind : MonoBehaviourExtBind
+    public abstract class UIButtonDataBind : MonoBehaviourExtBind
     {
         [Header("Model")]
         [SerializeField] private bool _globalModel = true;
 
-        [Tooltip("Ключ в модели, например: UI_CanStart или UI_CanStop")]
-        [SerializeField] private string _fieldName = "UI_CanStart";
+        //[Tooltip("Ключ в модели, например: UI_CanStart или UI_CanStop")]
+        //[SerializeField] private string _fieldName = "UI_CanStart";
 
         [Header("Click")]
         [Tooltip("Событие, которое отправляем в FSM, например: UI.StartClick")]
@@ -27,13 +26,14 @@ namespace SlotPrototype.UI
         {
             //_button = GetComponent<Button>();
             _button.onClick.AddListener(OnClick);
+           
         }
 
-        [OnStart]
-        private void ApplyInitial()
-        {
-            //_button.interactable = Settings.Model.GetBool(_fieldName, false); // вообще лажа получается
-        }
+        //[OnStart]
+        //private void ApplyInitial()
+        //{
+        //    //_button.interactable = Settings.Model.GetBool(_fieldName, false); // вообще лажа получается
+        //}
 
         private void OnClick()
         {
@@ -41,11 +41,15 @@ namespace SlotPrototype.UI
             Settings.Invoke(_clickEventName);
         }
 
-        [Bind("On{_fieldName}Changed")]
-        private void OnInteractableChanged(bool value)// не проходит!
+        //[Bind("On{_fieldName}Changed")]
+        //private void OnInteractableChanged(bool value)// не проходит!
+        //{
+        //}
+
+        protected void SetInteractable(bool value)
         {
-            Debug.Log("OnInteractableChanged");
-            if (_button != null) _button.interactable = value;
+            if (_button != null)
+                _button.interactable = value;
         }
 
         [OnDestroy]

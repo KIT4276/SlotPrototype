@@ -1278,12 +1278,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 836153868}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 57865061d070ddc4b9de49e35f528a8d, type: 3}
+  m_Script: {fileID: 11500000, guid: ead3cab8190bbfc43be0714ed4966f58, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   globalModel: 1
   _globalModel: 1
-  _fieldName: UI_CanStart
   _clickEventName: UI.StartClick
   _button: {fileID: 836153870}
 --- !u!1 &840637785
@@ -1624,12 +1623,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 1021243921}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 57865061d070ddc4b9de49e35f528a8d, type: 3}
+  m_Script: {fileID: 11500000, guid: 0ab8c75029b867b43af11ffa63a673e0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   globalModel: 1
   _globalModel: 1
-  _fieldName: UI_CanStop
   _clickEventName: UI.StopClick
   _button: {fileID: 1021243923}
 --- !u!1 &1159286391

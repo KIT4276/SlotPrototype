@@ -11,7 +11,7 @@ namespace SlotPrototype.States
         [Enter]
         public void Enter()
         {
-            Debug.Log("Enter SpinningState");
+           // Debug.Log("Enter SpinningState");
             Settings.Model.Set("UI_CanStart", false);
             Settings.Model.Set("UI_CanStop", true);
         }
