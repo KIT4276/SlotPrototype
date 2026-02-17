@@ -14,6 +14,7 @@ namespace SlotPrototype.States
            // Debug.Log("Enter StoppingState");
             Settings.Model.Set("UI_CanStart", false);
             Settings.Model.Set("UI_CanStop", false);
+            
         }
 
         [Bind("Reel.Stopped")]

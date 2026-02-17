@@ -13,6 +13,7 @@ namespace SlotPrototype.States
            // Debug.Log("Enter SpinningLockedState");
             Settings.Model.Set("UI_CanStart", false);
             Settings.Model.Set("UI_CanStop", false);
+            Settings.Model.Set("UI_Reel", true);
         }
 
         [One(3f)]
