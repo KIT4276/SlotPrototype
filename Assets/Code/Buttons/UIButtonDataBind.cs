@@ -33,7 +33,7 @@ namespace SlotPrototype.UI
             _eventName = "On" + _fieldName + "Changed";
         }
 
-        [OnStart]
+        [OnEnable]
         private void ApplyInitialAndBind()
         {
             SetInteractable(_model.Get<bool>(_fieldName));
