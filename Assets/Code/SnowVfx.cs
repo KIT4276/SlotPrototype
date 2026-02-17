@@ -3,21 +3,24 @@ using AxGrid.Model;
 using System;
 using UnityEngine;
 
-public class SnowVfx : MonoBehaviourExtBind
+namespace SlotPrototype
 {
-    [SerializeField] private ParticleSystem _ps;
-
-    [Bind("OnUI_ReelChanged")]
-    private void ReelChanged(params object[] args)
+    public class SnowVfx : MonoBehaviourExtBind
     {
-        var isReeling = args.Length > 0 ? args[0] : null;
+        [SerializeField] private ParticleSystem _ps;
 
-        if (Convert.ToBoolean(isReeling))
-            _ps.Play(withChildren: true);
-        else
-            StopEmit();
+        [Bind("OnUI_ReelChanged")]
+        private void ReelChanged(params object[] args)
+        {
+            var isReeling = args.Length > 0 ? args[0] : null;
+
+            if (Convert.ToBoolean(isReeling))
+                _ps.Play(withChildren: true);
+            else
+                StopEmit();
+        }
+
+        private void StopEmit() =>
+            _ps.Stop(withChildren: true, stopBehavior: ParticleSystemStopBehavior.StopEmitting);
     }
-
-    private void StopEmit() => 
-        _ps.Stop(withChildren: true, stopBehavior: ParticleSystemStopBehavior.StopEmitting);
 }

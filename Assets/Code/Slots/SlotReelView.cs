@@ -93,7 +93,6 @@ namespace SlotPrototype.UI
 
             if (!_isSnapping)
             {
-                // Торможение по времени
                 float stopTime = Mathf.Max(0.0001f, _stopTime);
                 _stopTimer += dt;
 
@@ -184,7 +183,6 @@ namespace SlotPrototype.UI
             float windowHalfH = _window.rect.height * 0.5f;
             float bottomY = -windowHalfH - recycleMargin;
 
-            // максимум сколько элементов можно переставить за кадр
             int guard = _itemViews.Count + 2;
 
             while (guard-- > 0)
@@ -192,19 +190,15 @@ namespace SlotPrototype.UI
                 var last = _itemViews[_itemViews.Count - 1];
                 float y = GetItemYInWindow(last.RectTransform);
 
-                // если последний ещё видим (не ниже границы) — выходим
                 if (y >= bottomY)
                     break;
 
-                // переносим нижний наверх
                 last.RectTransform.SetAsFirstSibling();
                 SetRandomSprite(last);
 
-                // синхронизируем список с новым порядком
                 _itemViews.RemoveAt(_itemViews.Count - 1);
                 _itemViews.Insert(0, last);
 
-                // компенсируем скачок из-за перестановки
                 _content.anchoredPosition += Vector2.up * step;
             }
         }
